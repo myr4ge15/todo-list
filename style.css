@@ -2,9 +2,11 @@
     --primary-color: #6c5ce7;
     --bg-gradient: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
     --text-color: #2d3436;
-    --success-color: #00b894;
-    --cancel-color: #fdcb6e;
-    --delete-color: #ff7675;
+    --success-color: #00b894; /* Зеленый */
+    --progress-color: #0984e3; /* Синий для "В работе" */
+    --backlog-color: #b2bec3; /* Серый для бэклога */
+    --cancel-color: #fdcb6e; /* Желтый для отмены */
+    --delete-color: #ff7675; /* Красный */
     --modal-bg: rgba(0, 0, 0, 0.5);
 }
 
@@ -78,10 +80,11 @@ button#add-btn:hover { transform: scale(1.05); }
     border-radius: 8px;
     cursor: pointer;
     color: #636e72;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     transition: all 0.3s;
-    min-width: 70px;
+    min-width: 60px;
+    text-transform: uppercase;
 }
 
 .filter-btn.active {
@@ -95,19 +98,29 @@ ul { list-style: none; }
 
 li {
     background: white;
-    border-bottom: 1px solid #f1f1f1;
+    border-left: 4px solid transparent; /* Цветная полоска слева */
     padding: 12px 15px;
     display: flex;
-    flex-direction: column; /* Изменили для размещения результата под текстом */
-    gap: 5px;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 10px;
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    transition: background-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+    transition: all 0.3s ease;
 }
 
-/* Верхняя строка задачи (чекбокс, текст, кнопки) */
+/* Статусные цвета полоски */
+li.status-backlog { border-left-color: var(--backlog-color); }
+li.status-in_progress { border-left-color: var(--progress-color); background: rgba(9, 132, 227, 0.03); }
+li.status-completed { border-left-color: var(--success-color); }
+li.status-cancelled { border-left-color: var(--cancel-color); opacity: 0.7; }
+
+li.removing { 
+    animation: fadeOut 0.3s ease forwards; 
+    pointer-events: none;
+}
+
 .task-row {
     display: flex;
     align-items: center;
@@ -115,94 +128,87 @@ li {
     width: 100%;
 }
 
-li.removing { 
-    animation: fadeOut 0.3s ease forwards; 
-    pointer-events: none;
-}
-
-/* Custom Checkbox */
-.custom-checkbox {
-    width: 22px;
-    height: 22px;
+/* Status Button (Circle) */
+.status-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     border: 2px solid #ddd;
-    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    font-size: 12px;
+    color: white;
 }
 
-.custom-checkbox:hover { border-color: var(--success-color); transform: scale(1.1); }
+/* Стили кнопки статуса */
+li.status-backlog .status-btn {
+    background: transparent;
+    border-color: var(--backlog-color);
+}
+li.status-backlog .status-btn:hover {
+    background: var(--backlog-color);
+    content: '▶'; /* Play icon via CSS is tricky, using JS or pseudo */
+}
+li.status-backlog .status-btn::after { content: ''; } /* Empty for backlog */
 
-li.completed .custom-checkbox {
-    background-color: var(--success-color);
+li.status-in_progress .status-btn {
+    background: var(--progress-color);
+    border-color: var(--progress-color);
+}
+li.status-in_progress .status-btn::after { content: '⏸'; font-size: 10px; } /* Pause icon */
+
+li.status-completed .status-btn {
+    background: var(--success-color);
     border-color: var(--success-color);
 }
+li.status-completed .status-btn::after { content: '✓'; font-size: 14px; font-weight: bold; }
 
-li.completed .custom-checkbox::after {
-    content: '✓';
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-li.cancelled .custom-checkbox {
-    background-color: var(--cancel-color);
+li.status-cancelled .status-btn {
+    background: var(--cancel-color);
     border-color: var(--cancel-color);
 }
-li.cancelled .custom-checkbox::after {
-    content: '✕';
-    color: white;
-    font-size: 12px;
-}
+li.status-cancelled .status-btn::after { content: '✕'; font-size: 12px; }
 
-/* Text */
+
 .task-text {
     flex-grow: 1;
     font-size: 16px;
     color: var(--text-color);
     word-break: break-word;
-    transition: color 0.3s ease, text-decoration 0.3s ease;
+    transition: color 0.3s ease;
 }
 
-li.completed .task-text {
+li.status-completed .task-text, li.status-cancelled .task-text {
     text-decoration: line-through;
     color: #b2bec3;
-}
-li.cancelled .task-text {
-    text-decoration: line-through;
-    color: #dfe6e9;
-    opacity: 0.7;
 }
 
 /* Result Text */
 .result-text {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--success-color);
     background: rgba(0, 184, 148, 0.1);
     padding: 4px 8px;
     border-radius: 6px;
-    margin-left: 32px; /* Отступ под чекбоксом */
-    margin-right: 30px;
+    margin-left: 34px;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    max-width: calc(100% - 40px);
     display: block;
 }
-.result-text:hover {
-    background: rgba(0, 184, 148, 0.2);
-    text-decoration: underline;
-}
+.result-text:hover { text-decoration: underline; }
 
 /* Action Buttons */
 .actions {
     display: flex;
     gap: 5px;
-    opacity: 0.6;
+    opacity: 0.4;
     transition: opacity 0.2s;
     flex-shrink: 0;
 }
@@ -222,8 +228,16 @@ li:hover .actions { opacity: 1; }
     justify-content: center;
 }
 
-.btn-cancel:hover { background: rgba(253, 203, 110, 0.2); transform: scale(1.1); }
-.btn-delete:hover { background: rgba(255, 118, 117, 0.2); transform: scale(1.1); }
+.btn-finish { color: var(--success-color); display: none; } /* Скрыта по умолчанию */
+li.status-in_progress .btn-finish { display: flex; } /* Показываем только если в работе */
+
+.btn-cancel { color: var(--cancel-color); }
+.btn-delete { color: var(--delete-color); }
+
+.action-btn:hover { transform: scale(1.1); }
+.btn-finish:hover { background: rgba(0, 184, 148, 0.1); }
+.btn-cancel:hover { background: rgba(253, 203, 110, 0.1); }
+.btn-delete:hover { background: rgba(255, 118, 117, 0.1); }
 
 .empty-state {
     text-align: center;
@@ -250,10 +264,7 @@ li:hover .actions { opacity: 1; }
     transition: opacity 0.3s ease;
 }
 
-.modal.show {
-    display: flex;
-    opacity: 1;
-}
+.modal.show { display: flex; opacity: 1; }
 
 .modal-content {
     background: white;
@@ -267,59 +278,18 @@ li:hover .actions { opacity: 1; }
     transition: transform 0.3s ease;
 }
 
-.modal.show .modal-content {
-    transform: translateY(0);
-}
+.modal.show .modal-content { transform: translateY(0); }
 
-.modal-content h3 {
-    margin-bottom: 10px;
-    color: var(--text-color);
-}
+.modal-content h3 { margin-bottom: 10px; color: var(--text-color); }
+.modal-content p { font-size: 14px; color: #636e72; margin-bottom: 15px; }
 
-.modal-content p {
-    font-size: 14px;
-    color: #636e72;
-    margin-bottom: 15px;
-}
+.modal-actions { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
 
-.modal-actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-}
+.btn-primary { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 .btn-primary:hover { background: #5649c0; }
-
-.btn-secondary {
-    background: #dfe6e9;
-    color: var(--text-color);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-}
+.btn-secondary { background: #dfe6e9; color: var(--text-color); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 .btn-secondary:hover { background: #b2bec3; }
-
-.btn-danger {
-    background: var(--delete-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-}
+.btn-danger { background: var(--delete-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 .btn-danger:hover { background: #d63031; }
 
 .full-result-display {
@@ -332,16 +302,6 @@ li:hover .actions { opacity: 1; }
     text-align: left;
 }
 
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes fadeOut {
-    to { opacity: 0; transform: translateX(20px); height: 0; margin: 0; padding: 0; }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+@keyframes slideIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes fadeOut { to { opacity: 0; transform: translateX(20px); height: 0; margin: 0; padding: 0; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
