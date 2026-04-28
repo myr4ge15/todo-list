@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой Todo List</title>
+    <title>Task Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <h1>✨ Мои задачи</h1>
+    <h1>🚀 Трекер Задач</h1>
     
     <div class="input-group">
-        <input type="text" id="todo-input" placeholder="Что нужно сделать?">
+        <input type="text" id="todo-input" placeholder="Новая задача...">
         <button id="add-btn">+</button>
     </div>
 
     <div class="filters">
         <button class="filter-btn active" data-filter="all">Все</button>
-        <button class="filter-btn" data-filter="active">В процессе</button>
+        <button class="filter-btn" data-filter="backlog">Бэклог</button>
+        <button class="filter-btn" data-filter="in_progress">В работе</button>
         <button class="filter-btn" data-filter="completed">Готово</button>
-        <button class="filter-btn" data-filter="cancelled">Отменено</button>
+        <button class="filter-btn" data-filter="cancelled">Отмена</button>
     </div>
 
     <ul id="todo-list"></ul>
@@ -31,12 +32,12 @@
     </div>
 </div>
 
-<!-- Модальное окно для результата -->
+<!-- Модальное окно результата -->
 <div id="result-modal" class="modal">
     <div class="modal-content">
-        <h3>Какой результат?</h3>
-        <p>Опишите итог выполнения (макс. 50 симв.)</p>
-        <input type="text" id="result-input" maxlength="50" placeholder="Например: Отправлено клиенту">
+        <h3>Результат работы</h3>
+        <p>Что было сделано? (макс. 50 симв.)</p>
+        <input type="text" id="result-input" maxlength="50" placeholder="Например: Макет утвержден">
         <div class="modal-actions">
             <button id="cancel-result-btn" class="btn-secondary">Отмена</button>
             <button id="save-result-btn" class="btn-primary">Сохранить</button>
@@ -59,7 +60,7 @@
 <!-- Модальное окно просмотра полного результата -->
 <div id="view-result-modal" class="modal">
     <div class="modal-content">
-        <h3>Результат задачи</h3>
+        <h3>Итог задачи</h3>
         <p id="full-result-text" class="full-result-display"></p>
         <div class="modal-actions">
             <button onclick="closeModal('view-result-modal')" class="btn-primary">Закрыть</button>
