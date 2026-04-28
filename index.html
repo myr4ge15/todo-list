@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мой Todo List</title>
-    <!-- Подключаем шрифт -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Подключаем стили -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,11 +17,11 @@
         <button id="add-btn">+</button>
     </div>
 
-    <!-- Фильтры -->
     <div class="filters">
         <button class="filter-btn active" data-filter="all">Все</button>
-        <button class="filter-btn" data-filter="active">Активные</button>
-        <button class="filter-btn" data-filter="completed">Завершенные</button>
+        <button class="filter-btn" data-filter="active">В процессе</button>
+        <button class="filter-btn" data-filter="completed">Готово</button>
+        <button class="filter-btn" data-filter="cancelled">Отменено</button>
     </div>
 
     <ul id="todo-list"></ul>
@@ -33,7 +31,6 @@
     </div>
 </div>
 
-<!-- Подключаем скрипт -->
 <script src="script.js"></script>
 </body>
 </html>
