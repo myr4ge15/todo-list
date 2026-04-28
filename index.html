@@ -31,6 +31,42 @@
     </div>
 </div>
 
+<!-- Модальное окно для результата -->
+<div id="result-modal" class="modal">
+    <div class="modal-content">
+        <h3>Какой результат?</h3>
+        <p>Опишите итог выполнения (макс. 50 симв.)</p>
+        <input type="text" id="result-input" maxlength="50" placeholder="Например: Отправлено клиенту">
+        <div class="modal-actions">
+            <button id="cancel-result-btn" class="btn-secondary">Отмена</button>
+            <button id="save-result-btn" class="btn-primary">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <h3>Удалить задачу?</h3>
+        <p>Это действие нельзя отменить.</p>
+        <div class="modal-actions">
+            <button id="cancel-delete-btn" class="btn-secondary">Нет</button>
+            <button id="confirm-delete-btn" class="btn-danger">Да, удалить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно просмотра полного результата -->
+<div id="view-result-modal" class="modal">
+    <div class="modal-content">
+        <h3>Результат задачи</h3>
+        <p id="full-result-text" class="full-result-display"></p>
+        <div class="modal-actions">
+            <button onclick="closeModal('view-result-modal')" class="btn-primary">Закрыть</button>
+        </div>
+    </div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>
