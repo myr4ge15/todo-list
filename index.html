@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Todo List</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+        button#add-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button#add-btn:hover {
+            background-color: #218838;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        li.completed span {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        span {
+            cursor: pointer;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Список задач</h1>
+    <div class="input-group">
+        <input type="text" id="todo-input" placeholder="Что нужно сделать?">
+        <button id="add-btn">Добавить</button>
+    </div>
+    <ul id="todo-list"></ul>
+</div>
+
+<script>
+    // Получаем элементы
+    const input = document.getElementById('todo-input');
+    const addBtn = document.getElementById('add-btn');
+    const todoList = document.getElementById('todo-list');
+
+    // Загружаем задачи из localStorage при старте
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+    // Функция сохранения
+    function saveTodos() {
+        localStorage.setItem('todos', JSON.stringify(todos));
+    }
+
+    // Функция отрисовки списка
+    function render() {
+        todoList.innerHTML = '';
+        todos.forEach((todo, index) => {
+            const li = document.createElement('li');
+            if (todo.completed) li.classList.add('completed');
+
+            const span = document.createElement('span');
+            span.textContent = todo.text;
+            span.onclick = () => toggleTodo(index); // Клик по тексту переключает статус
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Удалить';
+            delBtn.className = 'delete-btn';
+            delBtn.onclick = () => deleteTodo(index);
+
+            li.appendChild(span);
+            li.appendChild(delBtn);
+            todoList.appendChild(li);
+        });
+    }
+
+    // Добавление задачи
+    function addTodo() {
+        const text = input.value.trim();
+        if (text) {
+            todos.push({ text, completed: false });
+            input.value = '';
+            saveTodos();
+            render();
+        }
+    }
+
+    // Удаление задачи
+    function deleteTodo(index) {
+        todos.splice(index, 1);
+        saveTodos();
+        render();
+    }
+
+    // Переключение статуса (выполнено/не выполнено)
+    function toggleTodo(index) {
+        todos[index].completed = !todos[index].completed;
+        saveTodos();
+        render();
+    }
+
+    // Слушатели событий
+    addBtn.addEventListener('click', addTodo);
+    
+    // Добавление по нажатию Enter
+    input.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            addTodo();
+        }
+    });
+
+    // Первая отрисовка
+    render();
+</script>
+
+</body>
+</html>
