@@ -4,293 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мой Todo List</title>
+    <!-- Подключаем шрифт -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #6c5ce7;
-            --secondary-color: #a29bfe;
-            --bg-color: #dfe6e9;
-            --text-color: #2d3436;
-            --completed-color: #00b894;
-            --delete-color: #ff7675;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 450px;
-            backdrop-filter: blur(10px);
-            transform: translateY(0);
-            transition: transform 0.3s ease;
-        }
-
-        .container:hover {
-            transform: translateY(-5px);
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--text-color);
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-
-        .input-group {
-            position: relative;
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        input {
-            flex-grow: 1;
-            padding: 15px;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            outline: none;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-            font-family: inherit;
-        }
-
-        input:focus {
-            border-color: var(--primary-color);
-        }
-
-        button#add-btn {
-            padding: 15px 25px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
-        }
-
-        button#add-btn:hover {
-            background-color: #5649c0;
-            transform: scale(1.05);
-        }
-
-        button#add-btn:active {
-            transform: scale(0.95);
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        li {
-            background: white;
-            border-bottom: 1px solid #f1f1f1;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            animation: slideIn 0.3s ease-out forwards;
-            transition: all 0.3s ease;
-        }
-
-        li:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        li.completed {
-            opacity: 0.7;
-            background: #f8f9fa;
-        }
-
-        li.completed span {
-            text-decoration: line-through;
-            color: #b2bec3;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeOut {
-            to {
-                opacity: 0;
-                transform: translateX(50px);
-            }
-        }
-
-        li.removing {
-            animation: fadeOut 0.3s ease forwards;
-        }
-
-        span {
-            cursor: pointer;
-            flex-grow: 1;
-            font-size: 16px;
-            color: var(--text-color);
-            transition: color 0.3s ease;
-        }
-
-        .delete-btn {
-            background: transparent;
-            color: var(--delete-color);
-            border: none;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            margin-left: 10px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .delete-btn:hover {
-            background: rgba(255, 118, 117, 0.1);
-            transform: rotate(90deg);
-        }
-
-        /* Пустое состояние */
-        .empty-state {
-            text-align: center;
-            color: #b2bec3;
-            margin-top: 20px;
-            font-style: italic;
-        }
-    </style>
+    <!-- Подключаем стили -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
     <h1>✨ Мои задачи</h1>
+    
     <div class="input-group">
-        <input type="text" id="todo-input" placeholder="Добавить новую задачу...">
+        <input type="text" id="todo-input" placeholder="Что нужно сделать?">
         <button id="add-btn">+</button>
     </div>
+
+    <!-- Фильтры -->
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">Все</button>
+        <button class="filter-btn" data-filter="active">Активные</button>
+        <button class="filter-btn" data-filter="completed">Завершенные</button>
+    </div>
+
     <ul id="todo-list"></ul>
-    <div id="empty-state" class="empty-state" style="display: none;">
-        Список пуст. Добавьте первую задачу!
+    
+    <div id="empty-state" class="empty-state">
+        Список пуст 🍃
     </div>
 </div>
 
-<script>
-    const input = document.getElementById('todo-input');
-    const addBtn = document.getElementById('add-btn');
-    const todoList = document.getElementById('todo-list');
-    const emptyState = document.getElementById('empty-state');
-
-    let todos = JSON.parse(localStorage.getItem('todos')) || [];
-
-    function saveTodos() {
-        localStorage.setItem('todos', JSON.stringify(todos));
-    }
-
-    function checkEmptyState() {
-        if (todos.length === 0) {
-            emptyState.style.display = 'block';
-        } else {
-            emptyState.style.display = 'none';
-        }
-    }
-
-    function render() {
-        todoList.innerHTML = '';
-        todos.forEach((todo, index) => {
-            const li = document.createElement('li');
-            if (todo.completed) li.classList.add('completed');
-
-            const span = document.createElement('span');
-            span.textContent = todo.text;
-            span.onclick = () => toggleTodo(index, li);
-
-            const delBtn = document.createElement('button');
-            delBtn.innerHTML = '&times;'; // Крестик
-            delBtn.className = 'delete-btn';
-            delBtn.onclick = () => deleteTodo(index, li);
-
-            li.appendChild(span);
-            li.appendChild(delBtn);
-            todoList.appendChild(li);
-        });
-        checkEmptyState();
-    }
-
-    function addTodo() {
-        const text = input.value.trim();
-        if (text) {
-            todos.push({ text, completed: false });
-            input.value = '';
-            saveTodos();
-            render();
-            
-            // Анимация появления последнего элемента
-            const lastLi = todoList.lastElementChild;
-            if(lastLi) {
-                lastLi.style.animation = 'slideIn 0.4s ease-out';
-            }
-        }
-    }
-
-    function deleteTodo(index, liElement) {
-        // Добавляем класс для анимации удаления
-        liElement.classList.add('removing');
-        
-        // Ждем окончания анимации перед удалением из данных
-        setTimeout(() => {
-            todos.splice(index, 1);
-            saveTodos();
-            render();
-        }, 300);
-    }
-
-    function toggleTodo(index, liElement) {
-        todos[index].completed = !todos[index].completed;
-        saveTodos();
-        render();
-    }
-
-    addBtn.addEventListener('click', addTodo);
-    
-    input.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            addTodo();
-        }
-    });
-
-    render();
-</script>
-
+<!-- Подключаем скрипт -->
+<script src="script.js"></script>
 </body>
 </html>

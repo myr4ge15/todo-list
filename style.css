@@ -1,0 +1,184 @@
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --bg-gradient: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    --text-color: #2d3436;
+    --delete-color: #ff7675;
+    --shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 450px;
+    backdrop-filter: blur(10px);
+}
+
+h1 {
+    text-align: center;
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+/* Input Area */
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input {
+    flex-grow: 1;
+    padding: 15px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    outline: none;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+input:focus {
+    border-color: var(--primary-color);
+}
+
+button#add-btn {
+    padding: 0 25px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: 300;
+    transition: all 0.3s ease;
+}
+
+button#add-btn:hover {
+    background-color: #5649c0;
+    transform: scale(1.05);
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    background: #f1f2f6;
+    padding: 5px;
+    border-radius: 10px;
+}
+
+.filter-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #636e72;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.filter-btn.active {
+    background: white;
+    color: var(--primary-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* List Items */
+ul {
+    list-style: none;
+}
+
+li {
+    background: white;
+    border-bottom: 1px solid #f1f1f1;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    animation: slideIn 0.3s ease-out forwards;
+    transition: all 0.3s ease;
+}
+
+li:hover {
+    transform: translateX(5px);
+}
+
+li.completed span {
+    text-decoration: line-through;
+    color: #b2bec3;
+}
+
+li.removing {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+span {
+    cursor: pointer;
+    flex-grow: 1;
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.delete-btn {
+    background: transparent;
+    color: var(--delete-color);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+    background: rgba(255, 118, 117, 0.1);
+    transform: rotate(90deg);
+}
+
+.empty-state {
+    text-align: center;
+    color: #b2bec3;
+    margin-top: 20px;
+    display: none; /* Скрыто по умолчанию */
+}
+
+/* Animations */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateX(50px); }
+}
