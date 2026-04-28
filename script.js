@@ -19,9 +19,7 @@ const fullResultText = document.getElementById('full-result-text');
 
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
 let currentFilter = 'all'; 
-
-// Временные переменные для модальных окон
-let pendingTodoId = null; // ID задачи, которую хотим выполнить или удалить
+let pendingTodoId = null; // ID для модальных окон
 
 function saveTodos() {
     localStorage.setItem('todos', JSON.stringify(todos));
@@ -32,7 +30,8 @@ function generateId() {
 }
 
 function getFilteredTodos() {
-    if (currentFilter === 'active') return todos.filter(t => t.status === 'active');
+    if (currentFilter === 'backlog') return todos.filter(t => t.status === 'backlog');
+    if (currentFilter === 'in_progress') return todos.filter(t => t.status === 'in_progress');
     if (currentFilter === 'completed') return todos.filter(t => t.status === 'completed');
     if (currentFilter === 'cancelled') return todos.filter(t => t.status === 'cancelled');
     return todos;
@@ -43,8 +42,9 @@ function checkEmptyState() {
     if (visibleTodos.length === 0) {
         emptyState.style.display = 'block';
         if(currentFilter === 'completed') emptyState.textContent = 'Нет завершенных задач';
-        else if(currentFilter === 'active') emptyState.textContent = 'Нет активных задач';
-        else if(currentFilter === 'cancelled') emptyState.textContent = 'Нет отмененных задач';
+        else if(currentFilter === 'in_progress') emptyState.textContent = 'Ничего в работе';
+        else if(currentFilter === 'backlog') emptyState.textContent = 'Бэклог пуст';
+        else if(currentFilter === 'cancelled') emptyState.textContent = 'Нет отмененных';
         else emptyState.textContent = 'Список пуст 🍃';
     } else {
         emptyState.style.display = 'none';
@@ -58,18 +58,16 @@ function render() {
     itemsToRender.forEach((todo) => {
         const li = document.createElement('li');
         li.setAttribute('data-id', todo.id);
-        
-        if (todo.status === 'completed') li.classList.add('completed');
-        if (todo.status === 'cancelled') li.classList.add('cancelled');
+        li.classList.add(`status-${todo.status}`); // Добавляем класс статуса для CSS
 
-        // Контейнер для верхней строки (чекбокс, текст, кнопки)
         const taskRow = document.createElement('div');
         taskRow.className = 'task-row';
 
-        // 1. Чекбокс
-        const checkbox = document.createElement('div');
-        checkbox.className = 'custom-checkbox';
-        checkbox.onclick = () => handleCheckboxClick(todo.id);
+        // 1. Кнопка статуса (цикл: backlog <-> in_progress)
+        const statusBtn = document.createElement('div');
+        statusBtn.className = 'status-btn';
+        statusBtn.title = todo.status === 'backlog' ? 'Взять в работу' : 'Вернуть в бэклог';
+        statusBtn.onclick = () => toggleWorkStatus(todo.id);
 
         // 2. Текст
         const span = document.createElement('span');
@@ -80,39 +78,47 @@ function render() {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'actions';
 
-        // Кнопка "Отменить/Вернуть"
+        // Кнопка "Завершить" (видна только если in_progress)
+        const finishBtn = document.createElement('button');
+        finishBtn.className = 'action-btn btn-finish';
+        finishBtn.innerHTML = '✅';
+        finishBtn.title = 'Завершить задачу';
+        finishBtn.onclick = () => openResultModal(todo.id);
+
+        // Кнопка "Отменить"
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'action-btn btn-cancel';
         cancelBtn.innerHTML = todo.status === 'cancelled' ? '↩️' : '🚫';
-        cancelBtn.title = todo.status === 'cancelled' ? 'Вернуть задачу' : 'Отменить задачу';
-        cancelBtn.onclick = () => setStatus(todo.id, todo.status === 'cancelled' ? 'active' : 'cancelled');
+        cancelBtn.title = todo.status === 'cancelled' ? 'Вернуть' : 'Отменить';
+        cancelBtn.onclick = () => setStatus(todo.id, todo.status === 'cancelled' ? 'backlog' : 'cancelled');
 
         // Кнопка "Удалить"
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'action-btn btn-delete';
         deleteBtn.innerHTML = '🗑️';
-        deleteBtn.title = 'Удалить навсегда';
+        deleteBtn.title = 'Удалить';
+        // ИСПРАВЛЕНИЕ: передаем ID явно
         deleteBtn.onclick = () => openDeleteModal(todo.id);
 
         if (todo.status !== 'cancelled') {
-             actionsDiv.appendChild(cancelBtn);
+            actionsDiv.appendChild(finishBtn);
+            actionsDiv.appendChild(cancelBtn);
         } else {
-             actionsDiv.appendChild(cancelBtn);
+            actionsDiv.appendChild(cancelBtn);
         }
         actionsDiv.appendChild(deleteBtn);
 
-        taskRow.appendChild(checkbox);
+        taskRow.appendChild(statusBtn);
         taskRow.appendChild(span);
         taskRow.appendChild(actionsDiv);
 
         li.appendChild(taskRow);
 
-        // 4. Результат (если есть и статус completed)
+        // Результат
         if (todo.status === 'completed' && todo.result) {
             const resultDiv = document.createElement('div');
             resultDiv.className = 'result-text';
             resultDiv.textContent = todo.result;
-            resultDiv.title = 'Нажмите, чтобы посмотреть полностью';
             resultDiv.onclick = () => openViewResultModal(todo.result);
             li.appendChild(resultDiv);
         }
@@ -129,7 +135,7 @@ function addTodo() {
         todos.push({ 
             id: generateId(), 
             text, 
-            status: 'active',
+            status: 'backlog', // По умолчанию бэклог
             result: null 
         });
         input.value = '';
@@ -138,31 +144,41 @@ function addTodo() {
     }
 }
 
-// --- Логика Чекбокса и Модального окна результата ---
+// --- Логика Статусов ---
 
-function handleCheckboxClick(id) {
+// Переключение между Бэклогом и В работе
+function toggleWorkStatus(id) {
     const todo = todos.find(t => t.id === id);
     if (!todo) return;
 
-    if (todo.status === 'active') {
-        // Пытаемся выполнить -> открываем модалку
-        pendingTodoId = id;
-        openResultModal();
-    } else if (todo.status === 'completed') {
-        // Возвращаем в активные
-        todo.status = 'active';
-        todo.result = null; // Очищаем результат при возврате
-        saveTodos();
-        updateItemVisuals(todo);
+    if (todo.status === 'backlog') {
+        todo.status = 'in_progress';
+    } else if (todo.status === 'in_progress') {
+        todo.status = 'backlog';
     } else if (todo.status === 'cancelled') {
-        // Возвращаем из отмены
-        todo.status = 'active';
+        todo.status = 'backlog';
+    }
+    // Если completed, то через эту кнопку не переключаем, только через отмену
+    
+    saveTodos();
+    updateItemVisuals(todo);
+}
+
+// Установка конкретного статуса
+function setStatus(id, newStatus) {
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+        todo.status = newStatus;
+        if (newStatus !== 'completed') todo.result = null;
         saveTodos();
         updateItemVisuals(todo);
     }
 }
 
-function openResultModal() {
+// --- Модальные окна ---
+
+function openResultModal(id) {
+    pendingTodoId = id;
     resultInput.value = '';
     resultModal.classList.add('show');
     setTimeout(() => resultInput.focus(), 100);
@@ -178,9 +194,9 @@ saveResultBtn.addEventListener('click', () => {
         const todo = todos.find(t => t.id === pendingTodoId);
         if (todo) {
             todo.status = 'completed';
-            todo.result = resultInput.value.trim() || 'Выполнено'; // Дефолтный текст, если пусто
+            todo.result = resultInput.value.trim() || 'Выполнено';
             saveTodos();
-            render(); // Полная перерисовка, чтобы элемент мог исчезнуть из фильтра "Активные"
+            render();
         }
     }
     closeResultModal();
@@ -188,15 +204,7 @@ saveResultBtn.addEventListener('click', () => {
 
 cancelResultBtn.addEventListener('click', closeResultModal);
 
-// Закрытие по клику вне окна
-window.addEventListener('click', (e) => {
-    if (e.target === resultModal) closeResultModal();
-    if (e.target === confirmModal) closeDeleteModal();
-    if (e.target === viewResultModal) closeModal('view-result-modal');
-});
-
-// --- Логика Удаления ---
-
+// Удаление
 function openDeleteModal(id) {
     pendingTodoId = id;
     confirmModal.classList.add('show');
@@ -207,7 +215,8 @@ function closeDeleteModal() {
     pendingTodoId = null;
 }
 
-confirmDeleteBtn.addEventListener('click', () => {
+// ИСПРАВЛЕНИЕ: Обработчик кнопки подтверждения удаления
+confirmDeleteBtn.onclick = () => {
     if (pendingTodoId) {
         const li = document.querySelector(`li[data-id="${pendingTodoId}"]`);
         if (li) {
@@ -220,12 +229,11 @@ confirmDeleteBtn.addEventListener('click', () => {
             }, 300);
         }
     }
-});
+};
 
 cancelDeleteBtn.addEventListener('click', closeDeleteModal);
 
-// --- Логика Просмотра результата ---
-
+// Просмотр результата
 function openViewResultModal(text) {
     fullResultText.textContent = text;
     viewResultModal.classList.add('show');
@@ -235,56 +243,50 @@ function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('show');
 }
 
-// --- Общая логика ---
+window.addEventListener('click', (e) => {
+    if (e.target === resultModal) closeResultModal();
+    if (e.target === confirmModal) closeDeleteModal();
+    if (e.target === viewResultModal) closeModal('view-result-modal');
+});
 
-function setStatus(id, newStatus) {
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-        todo.status = newStatus;
-        if (newStatus !== 'completed') todo.result = null; // Сброс результата при отмене
-        saveTodos();
-        updateItemVisuals(todo);
-    }
-}
+// --- Обновление UI ---
 
 function updateItemVisuals(todo) {
     const li = document.querySelector(`li[data-id="${todo.id}"]`);
     if (li) {
-        li.classList.remove('completed', 'cancelled');
-        if (todo.status === 'completed') li.classList.add('completed');
-        if (todo.status === 'cancelled') li.classList.add('cancelled');
+        // Удаляем старые классы статусов
+        li.classList.remove('status-backlog', 'status-in_progress', 'status-completed', 'status-cancelled');
+        li.classList.add(`status-${todo.status}`);
 
+        // Обновляем иконки кнопок
+        const statusBtn = li.querySelector('.status-btn');
         const cancelBtn = li.querySelector('.btn-cancel');
+        const oldResult = li.querySelector('.result-text');
+        
+        if (oldResult) oldResult.remove();
+
         if (cancelBtn) {
             if (todo.status === 'cancelled') {
                 cancelBtn.innerHTML = '↩️';
-                cancelBtn.title = 'Вернуть задачу';
+                cancelBtn.title = 'Вернуть';
             } else {
                 cancelBtn.innerHTML = '🚫';
-                cancelBtn.title = 'Отменить задачу';
+                cancelBtn.title = 'Отменить';
             }
         }
-        
-        // Обновление результата в DOM без полной перерисовки сложно, 
-        // поэтому если статус изменился на completed, лучше перерисовать список,
-        // но для плавности мы оставим это на откуп пользователю (переключение фильтра)
-        // или просто удалим старый результат визуально, если он был.
-        const oldResult = li.querySelector('.result-text');
-        if (oldResult) oldResult.remove();
 
         if (todo.status === 'completed' && todo.result) {
-             const resultDiv = document.createElement('div');
+            const resultDiv = document.createElement('div');
             resultDiv.className = 'result-text';
             resultDiv.textContent = todo.result;
             resultDiv.onclick = () => openViewResultModal(todo.result);
             li.appendChild(resultDiv);
         }
-            
+
+        // Проверка видимости при фильтрации
         const isVisible = 
             (currentFilter === 'all') ||
-            (currentFilter === 'active' && todo.status === 'active') ||
-            (currentFilter === 'completed' && todo.status === 'completed') ||
-            (currentFilter === 'cancelled' && todo.status === 'cancelled');
+            (currentFilter === todo.status);
             
         if (!isVisible) {
              li.classList.add('removing');
