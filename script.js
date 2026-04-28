@@ -1,84 +1,124 @@
-// Элементы DOM
 const input = document.getElementById('todo-input');
 const addBtn = document.getElementById('add-btn');
 const todoList = document.getElementById('todo-list');
 const emptyState = document.getElementById('empty-state');
 const filterBtns = document.querySelectorAll('.filter-btn');
 
-// Состояние
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
-let currentFilter = 'all'; // 'all', 'active', 'completed'
+let currentFilter = 'all'; 
 
-// Сохранение в LocalStorage
 function saveTodos() {
     localStorage.setItem('todos', JSON.stringify(todos));
 }
 
-// Проверка пустого списка
+function getFilteredTodos() {
+    if (currentFilter === 'active') return todos.filter(t => t.status === 'active');
+    if (currentFilter === 'completed') return todos.filter(t => t.status === 'completed');
+    if (currentFilter === 'cancelled') return todos.filter(t => t.status === 'cancelled');
+    return todos;
+}
+
 function checkEmptyState() {
-    // Проверяем, есть ли задачи, соответствующие текущему фильтру
     const visibleTodos = getFilteredTodos();
     if (visibleTodos.length === 0) {
         emptyState.style.display = 'block';
-        // Меняем текст в зависимости от фильтра
         if(currentFilter === 'completed') emptyState.textContent = 'Нет завершенных задач';
         else if(currentFilter === 'active') emptyState.textContent = 'Нет активных задач';
+        else if(currentFilter === 'cancelled') emptyState.textContent = 'Нет отмененных задач';
         else emptyState.textContent = 'Список пуст 🍃';
     } else {
         emptyState.style.display = 'none';
     }
 }
 
-// Получение отфильтрованного списка
-function getFilteredTodos() {
-    if (currentFilter === 'active') return todos.filter(t => !t.completed);
-    if (currentFilter === 'completed') return todos.filter(t => t.completed);
-    return todos;
-}
-
-// Отрисовка списка
 function render() {
     todoList.innerHTML = '';
-    
     const itemsToRender = getFilteredTodos();
 
     itemsToRender.forEach((todo) => {
-        // Находим оригинальный индекс в массиве todos для корректного удаления/переключения
-        // (так как фильтрованный список имеет другие индексы)
         const originalIndex = todos.indexOf(todo);
-
         const li = document.createElement('li');
-        if (todo.completed) li.classList.add('completed');
+        
+        // Добавляем классы в зависимости от статуса
+        if (todo.status === 'completed') li.classList.add('completed');
+        if (todo.status === 'cancelled') li.classList.add('cancelled');
 
+        // 1. Чекбокс (переключает между active и completed)
+        const checkbox = document.createElement('div');
+        checkbox.className = 'custom-checkbox';
+        checkbox.onclick = () => toggleStatus(originalIndex);
+
+        // 2. Текст
         const span = document.createElement('span');
+        span.className = 'task-text';
         span.textContent = todo.text;
-        span.onclick = () => toggleTodo(originalIndex);
 
-        const delBtn = document.createElement('button');
-        delBtn.innerHTML = '&times;';
-        delBtn.className = 'delete-btn';
-        delBtn.onclick = () => deleteTodo(originalIndex, li);
+        // 3. Кнопки действий
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'actions';
 
+        // Кнопка "Отменить" (если задача активна) или "Вернуть" (если отменена/выполнена)
+        // Для простоты: эта кнопка ставит статус "cancelled"
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'action-btn btn-cancel';
+        cancelBtn.innerHTML = '🚫'; // Иконка запрета
+        cancelBtn.title = 'Отменить задачу';
+        cancelBtn.onclick = () => setStatus(originalIndex, 'cancelled');
+
+        // Кнопка "Удалить"
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'action-btn btn-delete';
+        deleteBtn.innerHTML = '🗑️'; // Иконка корзины
+        deleteBtn.title = 'Удалить навсегда';
+        deleteBtn.onclick = () => deleteTodo(originalIndex, li);
+
+        // Собираем кнопки. 
+        // Если задача уже отменена, кнопку отмены можно скрыть или оставить для возврата.
+        // Давайте оставим только удаление для отмененных, а для активных - отмену и удаление.
+        if (todo.status !== 'cancelled') {
+             actionsDiv.appendChild(cancelBtn);
+        }
+        actionsDiv.appendChild(deleteBtn);
+
+        li.appendChild(checkbox);
         li.appendChild(span);
-        li.appendChild(delBtn);
+        li.appendChild(actionsDiv);
         todoList.appendChild(li);
     });
 
     checkEmptyState();
 }
 
-// Добавление задачи
 function addTodo() {
     const text = input.value.trim();
     if (text) {
-        todos.push({ text, completed: false });
+        todos.push({ text, status: 'active' }); // status: 'active', 'completed', 'cancelled'
         input.value = '';
         saveTodos();
         render();
     }
 }
 
-// Удаление задачи с анимацией
+// Переключение между active и completed по клику на чекбокс
+function toggleStatus(index) {
+    if (todos[index].status === 'active') {
+        todos[index].status = 'completed';
+    } else if (todos[index].status === 'completed') {
+        todos[index].status = 'active';
+    } else if (todos[index].status === 'cancelled') {
+        todos[index].status = 'active'; // Возврат из отмены
+    }
+    saveTodos();
+    render();
+}
+
+// Явная установка статуса (для кнопки отмены)
+function setStatus(index, status) {
+    todos[index].status = status;
+    saveTodos();
+    render();
+}
+
 function deleteTodo(index, liElement) {
     liElement.classList.add('removing');
     setTimeout(() => {
@@ -88,33 +128,16 @@ function deleteTodo(index, liElement) {
     }, 300);
 }
 
-// Переключение статуса
-function toggleTodo(index) {
-    todos[index].completed = !todos[index].completed;
-    saveTodos();
-    render();
-}
-
-// Обработчики событий
 addBtn.addEventListener('click', addTodo);
+input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTodo(); });
 
-input.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') addTodo();
-});
-
-// Логика фильтров
 filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        // Убираем класс active у всех кнопок
         filterBtns.forEach(b => b.classList.remove('active'));
-        // Добавляем текущей
         btn.classList.add('active');
-        
-        // Обновляем фильтр и перерисовываем
         currentFilter = btn.getAttribute('data-filter');
         render();
     });
 });
 
-// Первый запуск
 render();
