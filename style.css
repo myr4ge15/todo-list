@@ -5,6 +5,7 @@
     --success-color: #00b894;
     --cancel-color: #fdcb6e;
     --delete-color: #ff7675;
+    --modal-bg: rgba(0, 0, 0, 0.5);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,6 +28,8 @@ body {
     width: 100%;
     max-width: 500px;
     backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
 }
 
 h1 { text-align: center; color: var(--text-color); margin-bottom: 1.5rem; }
@@ -40,6 +43,7 @@ input {
     border-radius: 12px;
     outline: none;
     font-size: 16px;
+    transition: border-color 0.3s;
 }
 input:focus { border-color: var(--primary-color); }
 
@@ -74,7 +78,7 @@ button#add-btn:hover { transform: scale(1.05); }
     border-radius: 8px;
     cursor: pointer;
     color: #636e72;
-    font-size: 12px; /* Чуть меньше шрифт для кнопок фильтров */
+    font-size: 12px;
     font-weight: 600;
     transition: all 0.3s;
     min-width: 70px;
@@ -94,31 +98,43 @@ li {
     border-bottom: 1px solid #f1f1f1;
     padding: 12px 15px;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column; /* Изменили для размещения результата под текстом */
+    gap: 5px;
     margin-bottom: 10px;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    animation: slideIn 0.3s ease-out forwards;
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transition: background-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
-li.removing { animation: fadeOut 0.3s ease forwards; }
+/* Верхняя строка задачи (чекбокс, текст, кнопки) */
+.task-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+li.removing { 
+    animation: fadeOut 0.3s ease forwards; 
+    pointer-events: none;
+}
 
 /* Custom Checkbox */
 .custom-checkbox {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border: 2px solid #ddd;
-    border-radius: 50%;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     flex-shrink: 0;
 }
 
-.custom-checkbox:hover { border-color: var(--success-color); }
+.custom-checkbox:hover { border-color: var(--success-color); transform: scale(1.1); }
 
 li.completed .custom-checkbox {
     background-color: var(--success-color);
@@ -128,7 +144,8 @@ li.completed .custom-checkbox {
 li.completed .custom-checkbox::after {
     content: '✓';
     color: white;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 li.cancelled .custom-checkbox {
@@ -147,6 +164,7 @@ li.cancelled .custom-checkbox::after {
     font-size: 16px;
     color: var(--text-color);
     word-break: break-word;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
 }
 
 li.completed .task-text {
@@ -159,11 +177,37 @@ li.cancelled .task-text {
     opacity: 0.7;
 }
 
+/* Result Text */
+.result-text {
+    font-size: 13px;
+    color: var(--success-color);
+    background: rgba(0, 184, 148, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-left: 32px; /* Отступ под чекбоксом */
+    margin-right: 30px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+}
+.result-text:hover {
+    background: rgba(0, 184, 148, 0.2);
+    text-decoration: underline;
+}
+
 /* Action Buttons */
 .actions {
     display: flex;
     gap: 5px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
 }
+
+li:hover .actions { opacity: 1; }
 
 .action-btn {
     border: none;
@@ -172,29 +216,132 @@ li.cancelled .task-text {
     padding: 5px;
     border-radius: 5px;
     font-size: 16px;
-    transition: background 0.2s;
+    transition: transform 0.2s, background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.btn-cancel { color: var(--cancel-color); }
-.btn-cancel:hover { background: rgba(253, 203, 110, 0.1); }
-
-.btn-delete { color: var(--delete-color); }
-.btn-delete:hover { background: rgba(255, 118, 117, 0.1); }
+.btn-cancel:hover { background: rgba(253, 203, 110, 0.2); transform: scale(1.1); }
+.btn-delete:hover { background: rgba(255, 118, 117, 0.2); transform: scale(1.1); }
 
 .empty-state {
     text-align: center;
     color: #b2bec3;
     margin-top: 20px;
     display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+/* Modals */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--modal-bg);
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    text-align: center;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.modal.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-content h3 {
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.modal-content p {
+    font-size: 14px;
+    color: #636e72;
+    margin-bottom: 15px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-primary:hover { background: #5649c0; }
+
+.btn-secondary {
+    background: #dfe6e9;
+    color: var(--text-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-secondary:hover { background: #b2bec3; }
+
+.btn-danger {
+    background: var(--delete-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-danger:hover { background: #d63031; }
+
+.full-result-display {
+    font-size: 16px;
+    color: var(--text-color);
+    background: #f1f2f6;
+    padding: 15px;
+    border-radius: 8px;
+    word-wrap: break-word;
+    text-align: left;
 }
 
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
 @keyframes fadeOut {
-    to { opacity: 0; transform: translateX(50px); }
+    to { opacity: 0; transform: translateX(20px); height: 0; margin: 0; padding: 0; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
