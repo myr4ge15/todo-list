@@ -1,17 +1,13 @@
 :root {
     --primary-color: #6c5ce7;
-    --secondary-color: #a29bfe;
     --bg-gradient: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
     --text-color: #2d3436;
+    --success-color: #00b894;
+    --cancel-color: #fdcb6e;
     --delete-color: #ff7675;
-    --shadow: 0 15px 35px rgba(0,0,0,0.1);
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'Poppins', sans-serif;
@@ -27,25 +23,15 @@ body {
     background: rgba(255, 255, 255, 0.95);
     padding: 2.5rem;
     border-radius: 20px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     width: 100%;
-    max-width: 450px;
+    max-width: 500px;
     backdrop-filter: blur(10px);
 }
 
-h1 {
-    text-align: center;
-    color: var(--text-color);
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-}
+h1 { text-align: center; color: var(--text-color); margin-bottom: 1.5rem; }
 
-/* Input Area */
-.input-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
+.input-group { display: flex; gap: 10px; margin-bottom: 20px; }
 
 input {
     flex-grow: 1;
@@ -54,12 +40,8 @@ input {
     border-radius: 12px;
     outline: none;
     font-size: 16px;
-    transition: border-color 0.3s ease;
 }
-
-input:focus {
-    border-color: var(--primary-color);
-}
+input:focus { border-color: var(--primary-color); }
 
 button#add-btn {
     padding: 0 25px;
@@ -69,19 +51,15 @@ button#add-btn {
     border-radius: 12px;
     cursor: pointer;
     font-size: 24px;
-    font-weight: 300;
-    transition: all 0.3s ease;
+    transition: transform 0.2s;
 }
-
-button#add-btn:hover {
-    background-color: #5649c0;
-    transform: scale(1.05);
-}
+button#add-btn:hover { transform: scale(1.05); }
 
 /* Filters */
 .filters {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 5px;
     margin-bottom: 20px;
     background: #f1f2f6;
     padding: 5px;
@@ -92,12 +70,14 @@ button#add-btn:hover {
     flex: 1;
     border: none;
     background: transparent;
-    padding: 8px;
+    padding: 8px 5px;
     border-radius: 8px;
     cursor: pointer;
     color: #636e72;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    font-size: 12px; /* Чуть меньше шрифт для кнопок фильтров */
+    font-weight: 600;
+    transition: all 0.3s;
+    min-width: 70px;
 }
 
 .filter-btn.active {
@@ -107,78 +87,114 @@ button#add-btn:hover {
 }
 
 /* List Items */
-ul {
-    list-style: none;
-}
+ul { list-style: none; }
 
 li {
     background: white;
     border-bottom: 1px solid #f1f1f1;
-    padding: 15px;
+    padding: 12px 15px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
     margin-bottom: 10px;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     animation: slideIn 0.3s ease-out forwards;
-    transition: all 0.3s ease;
 }
 
-li:hover {
-    transform: translateX(5px);
-}
+li.removing { animation: fadeOut 0.3s ease forwards; }
 
-li.completed span {
-    text-decoration: line-through;
-    color: #b2bec3;
-}
-
-li.removing {
-    animation: fadeOut 0.3s ease forwards;
-}
-
-span {
-    cursor: pointer;
-    flex-grow: 1;
-    font-size: 16px;
-    color: var(--text-color);
-}
-
-.delete-btn {
-    background: transparent;
-    color: var(--delete-color);
-    border: none;
-    width: 30px;
-    height: 30px;
+/* Custom Checkbox */
+.custom-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 18px;
-    margin-left: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    flex-shrink: 0;
 }
 
-.delete-btn:hover {
-    background: rgba(255, 118, 117, 0.1);
-    transform: rotate(90deg);
+.custom-checkbox:hover { border-color: var(--success-color); }
+
+li.completed .custom-checkbox {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
+
+li.completed .custom-checkbox::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+}
+
+li.cancelled .custom-checkbox {
+    background-color: var(--cancel-color);
+    border-color: var(--cancel-color);
+}
+li.cancelled .custom-checkbox::after {
+    content: '✕';
+    color: white;
+    font-size: 12px;
+}
+
+/* Text */
+.task-text {
+    flex-grow: 1;
+    font-size: 16px;
+    color: var(--text-color);
+    word-break: break-word;
+}
+
+li.completed .task-text {
+    text-decoration: line-through;
+    color: #b2bec3;
+}
+li.cancelled .task-text {
+    text-decoration: line-through;
+    color: #dfe6e9;
+    opacity: 0.7;
+}
+
+/* Action Buttons */
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+.action-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cancel { color: var(--cancel-color); }
+.btn-cancel:hover { background: rgba(253, 203, 110, 0.1); }
+
+.btn-delete { color: var(--delete-color); }
+.btn-delete:hover { background: rgba(255, 118, 117, 0.1); }
 
 .empty-state {
     text-align: center;
     color: #b2bec3;
     margin-top: 20px;
-    display: none; /* Скрыто по умолчанию */
+    display: none;
 }
 
-/* Animations */
 @keyframes slideIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fadeOut {
     to { opacity: 0; transform: translateX(50px); }
 }
