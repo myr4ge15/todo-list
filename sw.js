@@ -1,6 +1,6 @@
 // Service worker — офлайн-кэш Трекера Задач.
 // При изменении кэшируемых файлов поднимать версию CACHE — старый кэш удалится в activate.
-const CACHE = 'todo-tracker-v1';
+const CACHE = 'todo-tracker-v2';
 
 // Пути относительные (./) — важно для GitHub Pages (/todo-list/).
 const ASSETS = [

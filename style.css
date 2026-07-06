@@ -8,6 +8,11 @@
     --cancel-color: #fdcb6e; /* Желтый для отмены */
     --delete-color: #ff7675; /* Красный */
     --modal-bg: rgba(0, 0, 0, 0.5);
+    /* Приоритеты */
+    --priority-high: #e74c3c;
+    --priority-medium: #f39c12;
+    --priority-low: #95a5a6;
+    --overdue-color: #d63031;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,7 +41,7 @@ body {
 
 h1 { text-align: center; color: var(--text-color); margin-bottom: 1.5rem; }
 
-.input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+.input-group { display: flex; gap: 10px; margin-bottom: 12px; }
 
 input {
     flex-grow: 1;
@@ -60,6 +65,50 @@ button#add-btn {
     transition: transform 0.2s;
 }
 button#add-btn:hover { transform: scale(1.05); }
+
+/* Параметры новой задачи */
+.create-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.create-opt {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.create-opt-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #636e72;
+    text-transform: uppercase;
+    padding-left: 4px;
+}
+.create-opt select,
+.create-opt input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text-color);
+    background: white;
+    transition: border-color 0.3s;
+}
+.create-opt select:focus,
+.create-opt input[type="date"]:focus { border-color: var(--primary-color); }
+
+/* Поиск */
+.search-group { margin-bottom: 20px; }
+#search-input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 15px;
+    border-radius: 12px;
+}
 
 /* Filters */
 .filters {
@@ -110,14 +159,19 @@ li {
     transition: all 0.3s ease;
 }
 
+li.no-anim { animation: none; }
+
 /* Статусные цвета полоски */
 li.status-backlog { border-left-color: var(--backlog-color); }
 li.status-in_progress { border-left-color: var(--progress-color); background: rgba(9, 132, 227, 0.03); }
 li.status-completed { border-left-color: var(--success-color); }
 li.status-cancelled { border-left-color: var(--cancel-color); opacity: 0.7; }
 
-li.removing { 
-    animation: fadeOut 0.3s ease forwards; 
+/* Просроченные */
+li.overdue { border-left-color: var(--overdue-color); background: rgba(214, 48, 49, 0.04); }
+
+li.removing {
+    animation: fadeOut 0.3s ease forwards;
     pointer-events: none;
 }
 
@@ -141,7 +195,9 @@ li.removing {
     transition: all 0.2s ease;
     flex-shrink: 0;
     font-size: 12px;
+    font-family: inherit;
     color: white;
+    padding: 0;
 }
 
 /* Стили кнопки статуса */
@@ -151,7 +207,6 @@ li.status-backlog .status-btn {
 }
 li.status-backlog .status-btn:hover {
     background: var(--backlog-color);
-    content: '▶'; /* Play icon via CSS is tricky, using JS or pseudo */
 }
 li.status-backlog .status-btn::after { content: ''; } /* Empty for backlog */
 
@@ -187,6 +242,50 @@ li.status-completed .task-text, li.status-cancelled .task-text {
     color: #b2bec3;
 }
 
+/* Мета-строка: приоритет + срок */
+.task-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-left: 34px;
+}
+
+.priority-badge, .due-badge {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    transition: transform 0.15s, filter 0.15s;
+    color: white;
+}
+.priority-badge:hover, .due-badge:hover { transform: translateY(-1px); filter: brightness(0.95); }
+
+li.priority-high .priority-badge { background: var(--priority-high); }
+li.priority-medium .priority-badge { background: var(--priority-medium); }
+li.priority-low .priority-badge { background: var(--priority-low); }
+
+.due-badge {
+    background: #dfe6e9;
+    color: #636e72;
+}
+.due-badge.due-empty { background: transparent; color: #b2bec3; border: 1px dashed #cfd6da; padding: 2px 7px; }
+.due-badge.overdue-badge { background: var(--overdue-color); color: white; }
+
+.due-input {
+    padding: 4px 8px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    outline: none;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-color);
+    margin-left: 34px;
+}
+
 /* Result Text */
 .result-text {
     font-size: 12px;
@@ -201,6 +300,9 @@ li.status-completed .task-text, li.status-cancelled .task-text {
     text-overflow: ellipsis;
     max-width: calc(100% - 40px);
     display: block;
+    border: none;
+    font-family: inherit;
+    text-align: left;
 }
 .result-text:hover { text-decoration: underline; }
 
@@ -214,6 +316,7 @@ li.status-completed .task-text, li.status-cancelled .task-text {
 }
 
 li:hover .actions { opacity: 1; }
+li:focus-within .actions { opacity: 1; }
 
 .action-btn {
     border: none;
@@ -238,6 +341,14 @@ li.status-in_progress .btn-finish { display: flex; } /* Показываем т�
 .btn-finish:hover { background: rgba(0, 184, 148, 0.1); }
 .btn-cancel:hover { background: rgba(253, 203, 110, 0.1); }
 .btn-delete:hover { background: rgba(255, 118, 117, 0.1); }
+
+/* Видимый фокус для доступности */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
 
 .empty-state {
     text-align: center;
@@ -337,6 +448,40 @@ li.status-in_progress .btn-finish { display: flex; } /* Показываем т�
     word-wrap: break-word;
     text-align: left;
 }
+
+/* Тост (undo при удалении) */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text-color);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: none;
+    align-items: center;
+    gap: 14px;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 90%;
+}
+.toast.show { display: flex; opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-msg { font-size: 14px; }
+.toast-undo {
+    background: transparent;
+    border: none;
+    color: #74ebd5;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 4px;
+    white-space: nowrap;
+}
+.toast-undo:hover { text-decoration: underline; }
 
 @keyframes slideIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); height: 0; margin: 0; padding: 0; } }

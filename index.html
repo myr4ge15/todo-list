@@ -21,18 +21,39 @@
 
 <div class="container">
     <h1>🚀 Трекер Задач</h1>
-    
+
     <div class="input-group">
-        <input type="text" id="todo-input" placeholder="Новая задача...">
-        <button id="add-btn">+</button>
+        <input type="text" id="todo-input" placeholder="Новая задача..." aria-label="Текст новой задачи">
+        <button id="add-btn" aria-label="Добавить задачу">+</button>
     </div>
 
-    <div class="filters">
-        <button class="filter-btn active" data-filter="all">Все</button>
-        <button class="filter-btn" data-filter="backlog">Бэклог</button>
-        <button class="filter-btn" data-filter="in_progress">В работе</button>
-        <button class="filter-btn" data-filter="completed">Готово</button>
-        <button class="filter-btn" data-filter="cancelled">Отмена</button>
+    <!-- Параметры новой задачи: приоритет и срок -->
+    <div class="create-options">
+        <label class="create-opt">
+            <span class="create-opt-label">Приоритет</span>
+            <select id="create-priority" aria-label="Приоритет новой задачи">
+                <option value="high">🔴 Высокий</option>
+                <option value="medium" selected>🟡 Средний</option>
+                <option value="low">🟢 Низкий</option>
+            </select>
+        </label>
+        <label class="create-opt">
+            <span class="create-opt-label">Срок</span>
+            <input type="date" id="create-due" aria-label="Срок новой задачи">
+        </label>
+    </div>
+
+    <!-- Поиск -->
+    <div class="search-group">
+        <input type="search" id="search-input" placeholder="🔍 Поиск по задачам..." aria-label="Поиск по тексту задач">
+    </div>
+
+    <div class="filters" role="group" aria-label="Фильтры по статусу">
+        <button class="filter-btn active" data-filter="all" data-label="Все">Все</button>
+        <button class="filter-btn" data-filter="backlog" data-label="Бэклог">Бэклог</button>
+        <button class="filter-btn" data-filter="in_progress" data-label="В работе">В работе</button>
+        <button class="filter-btn" data-filter="completed" data-label="Готово">Готово</button>
+        <button class="filter-btn" data-filter="cancelled" data-label="Отмена">Отмена</button>
     </div>
 
     <ul id="todo-list"></ul>
@@ -49,9 +70,9 @@
 </div>
 
 <!-- Модальное окно результата -->
-<div id="result-modal" class="modal">
+<div id="result-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
     <div class="modal-content">
-        <h3>Результат работы</h3>
+        <h3 id="result-modal-title">Результат работы</h3>
         <p>Что было сделано? (макс. 50 симв.)</p>
         <input type="text" id="result-input" maxlength="50" placeholder="Например: Макет утвержден">
         <div class="modal-actions">
@@ -61,28 +82,19 @@
     </div>
 </div>
 
-<!-- Модальное окно подтверждения удаления -->
-<div id="confirm-modal" class="modal">
+<!-- Модальное окно просмотра полного результата -->
+<div id="view-result-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="view-result-title">
     <div class="modal-content">
-        <h3>Удалить задачу?</h3>
-        <p>Это действие нельзя отменить.</p>
+        <h3 id="view-result-title">Итог задачи</h3>
+        <p id="full-result-text" class="full-result-display"></p>
         <div class="modal-actions">
-            <button id="cancel-delete-btn" class="btn-secondary">Нет</button>
-            <button id="confirm-delete-btn" class="btn-danger">Да, удалить</button>
+            <button id="close-view-result-btn" class="btn-primary">Закрыть</button>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно просмотра полного результата -->
-<div id="view-result-modal" class="modal">
-    <div class="modal-content">
-        <h3>Итог задачи</h3>
-        <p id="full-result-text" class="full-result-display"></p>
-        <div class="modal-actions">
-            <button onclick="closeModal('view-result-modal')" class="btn-primary">Закрыть</button>
-        </div>
-    </div>
-</div>
+<!-- Тост с отменой удаления -->
+<div id="toast" class="toast" aria-live="polite"></div>
 
 <script src="script.js"></script>
 <script>
