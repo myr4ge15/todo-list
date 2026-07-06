@@ -247,6 +247,42 @@ li.status-in_progress .btn-finish { display: flex; } /* Показываем т�
     animation: fadeIn 0.5s ease;
 }
 
+/* Инлайн-редактирование задачи */
+.edit-input {
+    flex-grow: 1;
+    padding: 6px 8px;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    outline: none;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text-color);
+}
+
+/* Экспорт / импорт */
+.data-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #f1f2f6;
+}
+
+.data-btn {
+    background: #f1f2f6;
+    color: #636e72;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s;
+}
+.data-btn:hover { background: #dfe6e9; transform: translateY(-1px); }
+
 /* Modals */
 .modal {
     display: none;

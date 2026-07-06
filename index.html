@@ -26,9 +26,15 @@
     </div>
 
     <ul id="todo-list"></ul>
-    
+
     <div id="empty-state" class="empty-state">
         Список пуст 🍃
+    </div>
+
+    <div class="data-actions">
+        <button id="export-btn" class="data-btn" title="Скачать задачи в JSON">⬇️ Экспорт</button>
+        <button id="import-btn" class="data-btn" title="Загрузить задачи из JSON">⬆️ Импорт</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
     </div>
 </div>
 

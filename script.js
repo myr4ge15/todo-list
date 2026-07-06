@@ -17,8 +17,19 @@ const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 const viewResultModal = document.getElementById('view-result-modal');
 const fullResultText = document.getElementById('full-result-text');
 
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
-let currentFilter = 'all'; 
+// Безопасное чтение из localStorage: битые данные не должны ронять приложение
+function loadTodos() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem('todos'));
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        console.error('Не удалось прочитать задачи из localStorage:', e);
+        return [];
+    }
+}
+
+let todos = loadTodos();
+let currentFilter = 'all';
 let pendingTodoId = null; // ID для модальных окон
 
 function saveTodos() {
@@ -73,6 +84,8 @@ function render() {
         const span = document.createElement('span');
         span.className = 'task-text';
         span.textContent = todo.text;
+        span.title = 'Двойной клик — редактировать';
+        span.ondblclick = () => startEdit(todo.id, span);
 
         // 3. Кнопки действий
         const actionsDiv = document.createElement('div');
@@ -132,16 +145,54 @@ function render() {
 function addTodo() {
     const text = input.value.trim();
     if (text) {
-        todos.push({ 
-            id: generateId(), 
-            text, 
+        todos.push({
+            id: generateId(),
+            text,
             status: 'backlog', // По умолчанию бэклог
-            result: null 
+            result: null,
+            createdAt: Date.now(),
+            completedAt: null
         });
         input.value = '';
         saveTodos();
         render();
     }
+}
+
+// --- Редактирование задачи ---
+
+// Инлайн-правка текста: Enter/blur — сохранить, Escape — отменить
+function startEdit(id, span) {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+
+    const editInput = document.createElement('input');
+    editInput.type = 'text';
+    editInput.className = 'edit-input';
+    editInput.value = todo.text;
+    span.replaceWith(editInput);
+    editInput.focus();
+    editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+
+    let done = false;
+    const finish = (save) => {
+        if (done) return; // защита от двойного вызова (Enter + blur)
+        done = true;
+        if (save) {
+            const val = editInput.value.trim();
+            if (val) { // пустой ввод не затирает задачу
+                todo.text = val;
+                saveTodos();
+            }
+        }
+        render();
+    };
+
+    editInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finish(true);
+        else if (e.key === 'Escape') finish(false);
+    });
+    editInput.addEventListener('blur', () => finish(true));
 }
 
 // --- Логика Статусов ---
@@ -169,7 +220,10 @@ function setStatus(id, newStatus) {
     const todo = todos.find(t => t.id === id);
     if (todo) {
         todo.status = newStatus;
-        if (newStatus !== 'completed') todo.result = null;
+        if (newStatus !== 'completed') {
+            todo.result = null;
+            todo.completedAt = null;
+        }
         saveTodos();
         updateItemVisuals(todo);
     }
@@ -195,6 +249,7 @@ saveResultBtn.addEventListener('click', () => {
         if (todo) {
             todo.status = 'completed';
             todo.result = resultInput.value.trim() || 'Выполнено';
+            todo.completedAt = Date.now();
             saveTodos();
             render();
         }
@@ -297,6 +352,66 @@ function updateItemVisuals(todo) {
         }
     }
 }
+
+// --- Экспорт / импорт ---
+
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importFile = document.getElementById('import-file');
+
+const VALID_STATUSES = ['backlog', 'in_progress', 'completed', 'cancelled'];
+
+function exportTodos() {
+    const blob = new Blob([JSON.stringify(todos, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `todos-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importTodos(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const data = JSON.parse(reader.result);
+            if (!Array.isArray(data)) throw new Error('Ожидался массив задач');
+
+            // Нормализация: валидируем статус, проставляем недостающие поля
+            const imported = data
+                .filter(t => t && typeof t.text === 'string')
+                .map(t => ({
+                    id: t.id || generateId(),
+                    text: t.text,
+                    status: VALID_STATUSES.includes(t.status) ? t.status : 'backlog',
+                    result: t.status === 'completed' ? (t.result ?? 'Выполнено') : null,
+                    createdAt: t.createdAt ?? Date.now(),
+                    completedAt: t.status === 'completed' ? (t.completedAt ?? Date.now()) : null
+                }));
+
+            if (todos.length > 0 &&
+                !confirm(`Импорт заменит текущий список (${todos.length} задач) на ${imported.length}. Продолжить?`)) {
+                return;
+            }
+
+            todos = imported;
+            saveTodos();
+            render();
+        } catch (e) {
+            alert('Не удалось импортировать файл: ' + e.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+exportBtn.addEventListener('click', exportTodos);
+importBtn.addEventListener('click', () => importFile.click());
+importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) importTodos(file);
+    importFile.value = ''; // сброс, чтобы повторный выбор того же файла сработал
+});
 
 addBtn.addEventListener('click', addTodo);
 input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTodo(); });
